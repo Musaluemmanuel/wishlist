@@ -1,26 +1,29 @@
-// models/Product.js
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const ProductSchema = new Schema({
+const ProductSchema = new mongoose.Schema({
+    // Unique SKU/ID for the product. This ID is used by CartItem and WishlistItem.
+    id: { 
+        type: String, 
+        required: true, 
+        unique: true 
+    },
     name: {
         type: String,
-        required: true,
-        trim: true
+        required: true
+    },
+    description: {
+        type: String,
+        required: false
     },
     price: {
         type: Number,
         required: true
     },
-    description: {
-        type: String
-    },
-    sku: {
+    imageUrl: {
         type: String,
-        unique: true
+        required: false,
+        default: 'https://placehold.co/150x150/0000FF/FFFFFF?text=Product' // Placeholder
     }
 });
 
-// CRITICAL FIX: The third argument explicitly sets the collection name to 'Products' 
-// (matching your database casing). This solves the population error.
-module.exports = mongoose.model('Product', ProductSchema, 'Products');
+module.exports = mongoose.model('Product', ProductSchema);
