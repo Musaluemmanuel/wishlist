@@ -1,26 +1,77 @@
-// This file is required by server.js but only needs a simple GET route 
-// to prevent the "Cannot find module" error.
-
 const express = require('express');
 const router = express.Router();
-
-// Simulated static product data (matches the frontend's hardcoded data for consistency)
-const PRODUCTS = [
-    { id: 'prod-001', name: 'Premium Coffee Grinder', price: 49.99, description: 'Grind your beans perfectly every time.' },
-    { id: 'prod-002', name: 'Smart Watch X90', price: 199.99, description: 'Fitness tracking and notifications.' },
-    { id: 'prod-003', name: 'Ergonomic Desk Chair', price: 349.00, description: 'Support your back during long sessions.' },
-    { id: 'prod-004', name: 'Noise-Cancelling Headphones', price: 129.99, description: 'Immersive sound experience.' },
-    { id: 'prod-005', name: 'Mechanical Keyboard', price: 85.50, description: 'Tactile switches for typing enthusiasts.' },
-];
+const Product = require('../models/Product'); // The new Product model
 
 /**
- * @route GET /api/product
- * @desc Retrieves the full list of products.
+ * Helper function to initialize mock product data if the collection is empty.
+ * This ensures the frontend always has products to display.
+ */
+async function initializeProducts() {
+    try {
+        const count = await Product.countDocuments();
+        if (count === 0) {
+            console.log("Product collection is empty. Initializing mock data...");
+            const mockProducts = [
+                {
+                    id: 'SKU001',
+                    name: 'Cosmic Mug',
+                    description: 'A ceramic mug featuring a stunning nebula print. Perfect for coffee or tea.',
+                    price: 19.99,
+                    imageUrl: 'https://placehold.co/150x150/2a4365/ffffff?text=Mug'
+                },
+                {
+                    id: 'SKU002',
+                    name: 'Ergonomic Keyboard',
+                    description: 'Split mechanical keyboard designed for maximum wrist comfort and efficiency.',
+                    price: 129.50,
+                    imageUrl: 'https://placehold.co/150x150/48bb78/000000?text=Keyboard'
+                },
+                {
+                    id: 'SKU003',
+                    name: 'Noise-Cancelling Headphones',
+                    description: 'Over-ear headphones with industry-leading active noise cancellation.',
+                    price: 299.99,
+                    imageUrl: 'https://placehold.co/150x150/f6ad55/000000?text=Audio'
+                },
+                {
+                    id: 'SKU004',
+                    name: 'Portable Solar Charger',
+                    description: 'High-capacity power bank with integrated solar panels for off-grid charging.',
+                    price: 45.00,
+                    imageUrl: 'https://placehold.co/150x150/9f7aea/ffffff?text=Solar'
+                }
+            ];
+            await Product.insertMany(mockProducts);
+            console.log("Mock products initialized successfully.");
+        }
+    } catch (error) {
+        console.error("Error initializing products:", error.message);
+    }
+}
+
+// Immediately attempt to initialize products on load
+initializeProducts();
+
+
+/**
+ * @route GET /api/products
+ * @desc Retrieves all available products.
  * @access Public (No JWT required)
  */
-router.get('/', (req, res) => {
-    // Returns the simulated product list
-    res.json(PRODUCTS);
+router.get('/', async (req, res) => {
+    try {
+        // Fetch all products from the database
+        const products = await Product.find({});
+        
+        // Respond with the list of products
+        res.json(products);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error during GET products.');
+    }
 });
 
+
+// IMPORTANT: You need to expose this router object
 module.exports = router;
