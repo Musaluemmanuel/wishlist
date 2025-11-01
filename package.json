@@ -4,7 +4,7 @@
   "description": "A secure REST API for managing user authentication and wishlists using Node.js, Express, and MongoDB.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
