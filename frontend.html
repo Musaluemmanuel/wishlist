@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wishlist & Cart App Tester</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; padding: 20px; background-color: #f0f2f5; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        h1 { color: #1e3a8a; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { border-bottom: 2px solid #34d399; padding-bottom: 8px; color: #1f2937; margin-top: 25px; }
+        /* Forms and Inputs */
+        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; transition: border-color 0.3s; }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus { border-color: #34d399; outline: none; }
+        
+        /* Buttons */
+        button { background-color: #34d399; color: white; padding: 10px 15px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.3s, transform 0.1s; }
+        button:hover { background-color: #10b981; }
+        button:active { transform: scale(0.98); }
+        .logout-btn { background-color: #ef4444; }
+        .logout-btn:hover { background-color: #dc2626; }
+
+        /* Navigation */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .nav-tabs button { background: #f9fafb; color: #374151; border: 1px solid #e5e7eb; }
+        .nav-tabs button.active { background-color: #34d399; color: white; border-color: #34d399; }
+
+        /* Cards and Grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .product-card, .list-item {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .list-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            border: 1px solid #e5e7eb;
+        }
+        .list-item-details { flex-grow: 1; }
+
+        /* Output */
+        .output { 
+            background: #e0f7fa; 
+            border: 1px solid #b2ebf2; 
+            padding: 15px; 
+            margin-top: 20px; 
+            border-radius: 6px; 
+            white-space: pre-wrap; 
+            font-family: monospace; 
+            min-height: 50px;
+            overflow-x: auto;
+        }
+        .error { background: #fee2e2; border: 1px solid #f87171; color: #991b1b; }
+
+        /* Cart Summary */
+        .cart-summary { background: #f9f9e2; padding: 15px; border-radius: 6px; text-align: right; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Wishlist E-commerce Tester</h1>
+        
+        <p>Token Status: <code id="tokenDisplay" style="color: #34d399;">None (Logged Out)</code></p>
+
+        <!-- AUTHENTICATION VIEW (Visible when logged out) -->
+        <div id="authView" class="view">
+            <h2>🔑 Authentication</h2>
+            
+            <!-- Registration Form -->
+            <form id="registerForm" style="margin-bottom: 20px;">
+                <h3>Register</h3>
+                <input type="text" id="reg-username" placeholder="Username" value="emmanuel musalu" required>
+                <input type="email" id="reg-email" placeholder="Email" value="emmanuelmusalumwongela@gmail.com" required>
+                <input type="password" id="reg-password" placeholder="Password" value="Pinklemon123#" required>
+                <button type="submit">Register New User</button>
+            </form>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <h3>Login</h3>
+                <input type="email" id="log-email" placeholder="Email" value="emmanuelmusalumwongela@gmail.com" required>
+                <input type="password" id="log-password" placeholder="Password" value="Pinklemon123#" required>
+                <button type="submit">Log In</button>
+            </form>
+
+            <div class="output" id="authOutput">Authentication results will appear here...</div>
+        </div>
+
+        <!-- MAIN APPLICATION VIEW (Visible when logged in) -->
+        <div id="appView" class="view" style="display: none;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🛒 Application Menu</h2>
+                <div>
+                    <button id="testSecureAPI" style="background-color: #2563eb;">Test API (Wishlist)</button>
+                    <button id="logoutButton" class="logout-btn">Log Out</button>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button id="navProduct" class="active">Product Catalog</button>
+                <button id="navWishlist">Wishlist (<span id="wishlistCount">0</span>)</button>
+                <button id="navCart">Shopping Cart (<span id="cartCount">0</span>)</button>
+            </div>
+            
+            <div class="output" id="appOutput">App interaction log (Secure test results here)...</div>
+
+
+            <!-- 1. PRODUCT CATALOG VIEW -->
+            <div id="productView" class="sub-view">
+                <h3 style="margin-top: 20px;">Browse Products</h3>
+                <div class="product-grid" id="productGrid">
+                    <!-- Products rendered dynamically here -->
+                </div>
+            </div>
+
+            <!-- 2. WISHLIST VIEW -->
+            <div id="wishlistView" class="sub-view" style="display: none;">
+                <h3 style="margin-top: 20px;">Your Wishlist</h3>
+                <div id="wishlistList">
+                    <p style="text-align: center; color: #6b7280;">Your wishlist is empty. Add items from the catalog!</p>
+                    <!-- Wishlist items rendered dynamically here -->
+                </div>
+                <button style="margin-top: 20px; background-color: #22c55e;">Checkout Wishlist Items</button>
+            </div>
+
+            <!-- 3. SHOPPING CART VIEW -->
+            <div id="cartView" class="sub-view" style="display: none;">
+                <h3 style="margin-top: 20px;">Your Shopping Cart</h3>
+                <div id="cartList">
+                    <p style="text-align: center; color: #6b7280;">Your cart is empty.</p>
+                    <!-- Cart items rendered dynamically here -->
+                </div>
+                 <div class="cart-summary">
+                    Total Items: <span id="cartTotalItems">0</span> | Total Price: <span id="cartTotalPrice">$0.00</span>
+                </div>
+                <button style="margin-top: 20px; background-color: #f97316;">Proceed to Checkout</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:3000/api/auth'; 
+        const API_BASE = 'http://127.0.0.1:3000/api';
+        
+        const AUTH_OUTPUT = document.getElementById('authOutput');
+        const APP_OUTPUT = document.getElementById('appOutput');
+        const TOKEN_DISPLAY = document.getElementById('tokenDisplay');
+        const AUTH_VIEW = document.getElementById('authView');
+        const APP_VIEW = document.getElementById('appView');
+        const PRODUCT_GRID = document.getElementById('productGrid');
+        const WISHLIST_LIST = document.getElementById('wishlistList');
+        const CART_LIST = document.getElementById('cartList');
+        const WISHLIST_COUNT = document.getElementById('wishlistCount');
+        const CART_COUNT = document.getElementById('cartCount');
+        
+        let currentToken = '';
+        let currentView = 'product'; // Default view in app
+
+        // --- STATIC/SIMULATED DATA ---
+        // In a real app, this would be fetched from /api/product
+        const PRODUCTS = [
+            { id: 'prod-001', name: 'Premium Coffee Grinder', price: 49.99, description: 'Grind your beans perfectly every time.' },
+            { id: 'prod-002', name: 'Smart Watch X90', price: 199.99, description: 'Fitness tracking and notifications.' },
+            { id: 'prod-003', name: 'Ergonomic Desk Chair', price: 349.00, description: 'Support your back during long sessions.' },
+            { id: 'prod-004', name: 'Noise-Cancelling Headphones', price: 129.99, description: 'Immersive sound experience.' },
+            { id: 'prod-005', name: 'Mechanical Keyboard', price: 85.50, description: 'Tactile switches for typing enthusiasts.' },
+        ];
+        
+        let wishlistItems = []; // Array of product IDs/Objects
+        let cartItems = [];     // Array of {productId, quantity}
+
+        // --- Utility Functions ---
+
+        /** Updates the specified output box (auth or app) */
+        function updateOutput(data, isError = false, targetOutput = AUTH_OUTPUT) {
+            targetOutput.classList.remove('error');
+            if (isError) {
+                targetOutput.classList.add('error');
+                const message = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                targetOutput.textContent = 'ERROR:\n' + message;
+            } else {
+                targetOutput.textContent = 'SUCCESS:\n' + JSON.stringify(data, null, 2);
+            }
+        }
+        
+        function clearOutput(targetOutput = AUTH_OUTPUT) {
+            targetOutput.textContent = 'Processing...';
+            targetOutput.classList.remove('error');
+        }
+
+        /** Renders the full product catalog view */
+        function renderProducts() {
+            PRODUCT_GRID.innerHTML = '';
+            PRODUCTS.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p style="color: #10b981; font-weight: bold;">$${product.price.toFixed(2)}</p>
+                    <p style="font-size: 0.9em; margin-bottom: 15px;">${product.description}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button data-product-id="${product.id}" onclick="handleWishlistAdd(event)" style="background-color: #6366f1;">Add to Wishlist</button>
+                        <button data-product-id="${product.id}" onclick="handleCartAdd(event)">Add to Cart</button>
+                    </div>
+                `;
+                PRODUCT_GRID.appendChild(card);
+            });
+        }
+        
+        /** Renders the wishlist view */
+        function renderWishlist() {
+            WISHLIST_LIST.innerHTML = '';
+            WISHLIST_COUNT.textContent = wishlistItems.length;
+            
+            if (wishlistItems.length === 0) {
+                WISHLIST_LIST.innerHTML = '<p style="text-align: center; color: #6b7280;">Your wishlist is empty. Add items from the catalog!</p>';
+                return;
+            }
+
+            wishlistItems.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `
+                    <div class="list-item-details">
+                        <p><strong>${product.name}</strong></p>
+                        <p style="font-size: 0.9em; color: #666;">$${product.price.toFixed(2)}</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="handleCartAdd(event)" data-product-id="${product.id}" style="background-color: #10b981;">Add to Cart</button>
+                        <button onclick="handleRemoveFromWishlist(event)" data-product-id="${product.id}" style="background-color: #f59e0b;">Remove</button>
+                    </div>
+                `;
+                WISHLIST_LIST.appendChild(item);
+            });
+        }
+        
+        /** Renders the cart view and calculates totals */
+        function renderCart() {
+            CART_LIST.innerHTML = '';
+            CART_COUNT.textContent = cartItems.length;
+            let totalPrice = 0;
+            let totalItems = 0;
+
+            if (cartItems.length === 0) {
+                CART_LIST.innerHTML = '<p style="text-align: center; color: #6b7280;">Your cart is empty.</p>';
+                document.getElementById('cartTotalItems').textContent = 0;
+                document.getElementById('cartTotalPrice').textContent = '$0.00';
+                return;
+            }
+
+            cartItems.forEach(item => {
+                const product = PRODUCTS.find(p => p.id === item.productId);
+                if (!product) return;
+                
+                totalPrice += product.price * item.quantity;
+                totalItems += item.quantity;
+
+                const listItem = document.createElement('div');
+                listItem.className = 'list-item';
+                listItem.innerHTML = `
+                    <div class="list-item-details">
+                        <p><strong>${product.name}</strong> x ${item.quantity}</p>
+                        <p style="font-size: 0.9em; color: #666;">Price: $${(product.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="handleQuantityChange(event, 'decrease')" data-product-id="${product.id}" style="background-color: #9ca3af;">-</button>
+                        <button onclick="handleQuantityChange(event, 'increase')" data-product-id="${product.id}">+</button>
+                        <button onclick="handleRemoveFromCart(event)" data-product-id="${product.id}" style="background-color: #f59e0b;">Remove</button>
+                    </div>
+                `;
+                CART_LIST.appendChild(listItem);
+            });
+            
+            document.getElementById('cartTotalItems').textContent = totalItems;
+            document.getElementById('cartTotalPrice').textContent = `$${totalPrice.toFixed(2)}`;
+        }
+        
+        /** Switches between the Product, Wishlist, and Cart sub-views */
+        function showView(viewName) {
+            currentView = viewName;
+            
+            // Hide all sub-views
+            document.querySelectorAll('.sub-view').forEach(view => view.style.display = 'none');
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
+            
+            // Show the requested view and set active button
+            document.getElementById(`${viewName}View`).style.display = 'block';
+            document.getElementById(`nav${viewName.charAt(0).toUpperCase() + viewName.slice(1)}`).classList.add('active');
+
+            // Render content for the active view
+            if (viewName === 'product') renderProducts();
+            if (viewName === 'wishlist') renderWishlist();
+            if (viewName === 'cart') renderCart();
+        }
+
+        /** Toggles between the Auth view and the main App view */
+        function toggleAppView(showApp) {
+            if (showApp) {
+                AUTH_VIEW.style.display = 'none';
+                APP_VIEW.style.display = 'block';
+                TOKEN_DISPLAY.textContent = currentToken.substring(0, 40) + '...';
+                TOKEN_DISPLAY.style.color = '#34d399';
+                clearOutput(APP_OUTPUT); // Clear product log on transition
+                showView('product'); // Default to product catalog
+            } else {
+                AUTH_VIEW.style.display = 'block';
+                APP_VIEW.style.display = 'none';
+                currentToken = ''; // Clear token on logout
+                updateOutput({ message: 'Logged out successfully.' }, false, AUTH_OUTPUT);
+                TOKEN_DISPLAY.textContent = 'None (Logged Out)';
+                TOKEN_DISPLAY.style.color = '#ef4444';
+            }
+        }
+
+        // --- E-COMMERCE INTERACTION HANDLERS ---
+        
+        async function handleWishlistAdd(e) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            const product = PRODUCTS.find(p => p.id === productId);
+
+            if (!currentToken) {
+                updateOutput({ message: 'Login required to add to wishlist.' }, true, APP_OUTPUT);
+                return;
+            }
+            if (wishlistItems.some(item => item.id === productId)) {
+                 updateOutput({ message: `${product.name} is already in your wishlist.` }, false, APP_OUTPUT);
+                 return;
+            }
+            
+            // 1. SIMULATE BACKEND CALL (POST /api/wishlist)
+            try {
+                const response = await fetch(`${API_BASE}/wishlist`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}` 
+                    },
+                    body: JSON.stringify({ productId: productId })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    updateOutput({ message: 'Failed to add to wishlist via API.', details: data }, true, APP_OUTPUT);
+                    return;
+                }
+                
+                // 2. FRONTEND STATE UPDATE (Simulating success)
+                wishlistItems.push(product);
+                updateOutput({ message: `Added ${product.name} to wishlist!`, backendResponse: data }, false, APP_OUTPUT);
+                
+                // 3. Re-render if currently viewing the wishlist
+                if (currentView === 'wishlist') renderWishlist();
+                WISHLIST_COUNT.textContent = wishlistItems.length;
+
+            } catch (error) {
+                 updateOutput({ message: 'Wishlist API connection failed.', error: error.message }, true, APP_OUTPUT);
+            }
+        }
+        
+        function handleRemoveFromWishlist(e) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            const initialLength = wishlistItems.length;
+            wishlistItems = wishlistItems.filter(item => item.id !== productId);
+            
+            if (initialLength > wishlistItems.length) {
+                updateOutput({ message: `Removed product ID ${productId} from local wishlist (API DELETE is needed).` }, false, APP_OUTPUT);
+            }
+            
+            renderWishlist();
+        }
+
+        async function handleCartAdd(e) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            const product = PRODUCTS.find(p => p.id === productId);
+
+            if (!currentToken) {
+                updateOutput({ message: 'Login required to add to cart.' }, true, APP_OUTPUT);
+                return;
+            }
+            
+            // 1. SIMULATE BACKEND CALL (POST /api/cart)
+            try {
+                // NOTE: Using /api/cart route, assuming it exists on your backend
+                const response = await fetch(`${API_BASE}/cart`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}` 
+                    },
+                    body: JSON.stringify({ productId: productId, quantity: 1 })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    updateOutput({ message: 'Failed to add to cart via API.', details: data }, true, APP_OUTPUT);
+                    return;
+                }
+
+                // 2. FRONTEND STATE UPDATE (Simulating success)
+                const existingItem = cartItems.find(item => item.productId === productId);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cartItems.push({ productId, quantity: 1 });
+                }
+                
+                updateOutput({ message: `Added ${product.name} to cart!`, backendResponse: data }, false, APP_OUTPUT);
+                
+                // 3. Re-render if currently viewing the cart
+                if (currentView === 'cart') renderCart();
+                CART_COUNT.textContent = cartItems.length; // Count distinct items
+
+            } catch (error) {
+                 updateOutput({ message: 'Cart API connection failed.', error: error.message }, true, APP_OUTPUT);
+            }
+        }
+        
+        function handleRemoveFromCart(e) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            cartItems = cartItems.filter(item => item.productId !== productId);
+            updateOutput({ message: `Removed product ID ${productId} from local cart (API DELETE is needed).` }, false, APP_OUTPUT);
+            renderCart();
+        }
+        
+        function handleQuantityChange(e, action) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            const item = cartItems.find(item => item.productId === productId);
+            
+            if (item) {
+                if (action === 'increase') {
+                    item.quantity += 1;
+                } else if (action === 'decrease' && item.quantity > 1) {
+                    item.quantity -= 1;
+                } else if (action === 'decrease' && item.quantity === 1) {
+                    // Remove if quantity drops to zero
+                    handleRemoveFromCart(e);
+                    return;
+                }
+                renderCart();
+                updateOutput({ message: `Quantity updated for product ID ${productId}.` }, false, APP_OUTPUT);
+            }
+        }
+        
+        // --- API Call Handlers ---
+        
+        // 1. REGISTRATION HANDLER
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearOutput(AUTH_OUTPUT);
+
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            const requestBody = { username, email, password };
+            console.log('Sending Registration Request Body:', requestBody); 
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    updateOutput(data, true, AUTH_OUTPUT);
+                    return;
+                }
+                
+                updateOutput({ message: 'Registration successful! Please log in.' }, false, AUTH_OUTPUT);
+
+            } catch (error) {
+                updateOutput({ message: 'Failed to connect to API.', error: error.message }, true, AUTH_OUTPUT);
+            }
+        });
+
+        // 2. LOGIN HANDLER
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearOutput(AUTH_OUTPUT);
+
+            const email = document.getElementById('log-email').value;
+            const password = document.getElementById('log-password').value;
+
+            const requestBody = { email, password };
+            console.log('Sending Login Request Body:', requestBody); 
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json().catch(() => ({ message: 'No JSON body returned from server.' }));
+
+                if (!response.ok) {
+                    updateOutput(data, true, AUTH_OUTPUT);
+                    return;
+                }
+                
+                currentToken = data.token;
+                updateOutput({ message: 'Login successful. Token acquired.', token: currentToken.substring(0, 40) + '...' }, false, AUTH_OUTPUT);
+                
+                toggleAppView(true); 
+
+            } catch (error) {
+                updateOutput({ message: 'Failed to connect to API.', error: error.message }, true, AUTH_OUTPUT);
+            }
+        });
+        
+        // 3. SECURE API TEST HANDLER (GET /api/wishlist)
+        document.getElementById('testSecureAPI').addEventListener('click', async () => {
+            clearOutput(APP_OUTPUT); 
+            
+            if (!currentToken) {
+                updateOutput({ message: 'ERROR: No token found. Please Log In first.' }, true, APP_OUTPUT);
+                return;
+            }
+
+            console.log('Testing secure API with token...');
+
+            try {
+                const response = await fetch(`${API_BASE}/wishlist`, { 
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const contentType = response.headers.get("content-type");
+                let data;
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await response.json();
+                } else {
+                    data = { message: `Received non-JSON response (Status: ${response.status}). Check server logs for full error.` };
+                }
+
+                if (!response.ok) {
+                    updateOutput(data, true, APP_OUTPUT);
+                    return;
+                }
+                
+                updateOutput({ message: 'Secure API Test Successful! (Wishlist Data)', data: data }, false, APP_OUTPUT);
+
+            } catch (error) {
+                updateOutput({ message: 'Failed to connect to API.', error: error.message }, true, APP_OUTPUT);
+            }
+        });
+
+        // 4. LOGOUT HANDLER
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            toggleAppView(false);
+        });
+        
+        // 5. Navigation Event Listeners
+        document.getElementById('navProduct').addEventListener('click', () => showView('product'));
+        document.getElementById('navWishlist').addEventListener('click', () => showView('wishlist'));
+        document.getElementById('navCart').addEventListener('click', () => showView('cart'));
+
+    </script>
+
+</body>
+</html>
