@@ -1,10 +1,9 @@
 // Express.js Wishlist API Routes
 const express = require('express');
 const router = express.Router();
-// FIX 1: Rename the import to 'auth' for consistency and clarity,
-// matching the export style of middleware/auth.js.
 const auth = require('../middleware/auth'); 
-const WishlistItem = require('../models/WishlistItem'); // Import Mongoose Model
+// FIX: Changed variable name to all lowercase 'wishlist' as requested
+const wishlist = require('../models/wishlist'); 
 const mongoose = require('mongoose'); // Needed for checking IDs
 
 /**
@@ -14,11 +13,8 @@ const mongoose = require('mongoose'); // Needed for checking IDs
  * @payload { id: String (Product SKU), name: String, price: Number }
  */
 router.post('/', auth, async (req, res) => {
-    // req.user contains the decoded JWT payload: { userId: '...' }
-    // NOTE: Your auth payload should be accessed via req.user.id if using the standard
-    // payload structure { user: { id: user._id, ... } } as defined in routes/auth.js.
-    // I am assuming your current auth.js uses 'id' inside req.user, not 'userId'.
-    const userId = req.user.id; 
+    // req.user contains the decoded JWT payload: { id: '...' }
+    const userId = req.user.id; 
     const { id, name, price } = req.body; // Product details from frontend
 
     if (!id || !name || typeof price === 'undefined') {
@@ -27,7 +23,8 @@ router.post('/', auth, async (req, res) => {
 
     try {
         // 1. Check if the item already exists in the user's wishlist
-        const existingItem = await WishlistItem.findOne({ userId, id });
+        // Using lowercase 'wishlist' model variable
+        const existingItem = await wishlist.findOne({ userId, id });
 
         if (existingItem) {
             // If it exists, return success but inform it's a duplicate
@@ -38,7 +35,8 @@ router.post('/', auth, async (req, res) => {
         }
 
         // 2. Create and save the new wishlist item
-        const newItem = new WishlistItem({
+        // Using lowercase 'wishlist' model variable
+        const newItem = new wishlist({
             userId,
             id,
             name,
@@ -55,7 +53,6 @@ router.post('/', auth, async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        // FIX 2: Ensure error response is JSON formatted
         res.status(500).json({ msg: 'Server Error during POST wishlist.', error: err.message });
     }
 });
@@ -67,20 +64,17 @@ router.post('/', auth, async (req, res) => {
  * @access Private (Requires JWT)
  */
 router.get('/', auth, async (req, res) => {
-    // req.user contains the decoded JWT payload: { userId: '...' }
-    // I am assuming your current auth.js uses 'id' inside req.user, not 'userId'.
     const userId = req.user.id; 
 
     try {
-        // Find all WishlistItems belonging to the authenticated user
-        const wishlist = await WishlistItem.find({ userId }).sort({ timestamp: -1 });
+        // Find all Wishlist documents belonging to the authenticated user
+        const wishlistItems = await wishlist.find({ userId }).sort({ timestamp: -1 });
         
         // Sends the list of Mongoose documents back
-        res.json(wishlist);
+        res.json(wishlistItems);
 
     } catch (err) {
         console.error(err.message);
-        // FIX 2: Ensure error response is JSON formatted
         res.status(500).json({ msg: 'Server Error during GET wishlist.', error: err.message });
     }
 });
@@ -92,8 +86,6 @@ router.get('/', auth, async (req, res) => {
  * @access Private (Requires JWT)
  */
 router.delete('/:itemId', auth, async (req, res) => {
-    // req.user contains the decoded JWT payload: { userId: '...' }
-    // I am assuming your current auth.js uses 'id' inside req.user, not 'userId'.
     const userId = req.user.id;
     const itemId = req.params.itemId;
 
@@ -104,7 +96,7 @@ router.delete('/:itemId', auth, async (req, res) => {
 
     try {
         // Find the item by its MongoDB ID AND ensure it belongs to the authenticated user
-        const result = await WishlistItem.deleteOne({
+        const result = await wishlist.deleteOne({
             _id: itemId, // The Mongoose Document ID passed in the URL parameter
             userId: userId // Authorization check
         });
@@ -117,7 +109,6 @@ router.delete('/:itemId', auth, async (req, res) => {
         
     } catch (err) {
         console.error(err.message);
-        // FIX 2: Ensure error response is JSON formatted
         res.status(500).json({ msg: 'Server Error during DELETE wishlist.', error: err.message });
     }
 });
